@@ -1,0 +1,27 @@
+name: dbt CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  dbt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Build da imagem dbt
+        run: |
+          docker build \
+            -t pipeline-dbt:1.0 \
+            -f docker/dbt/Dockerfile .
+
+      - name: Verificar versão do dbt
+        run: |
+          docker run --rm pipeline-dbt:1.0 --version
