@@ -764,7 +764,7 @@ Nunca utilizar credenciais de produção diretamente no desenvolvimento.
 
 ---
 
-# 26. Etapa 22 — Controle de versões
+# 26. Etapa 22 — Controle de versões e GitHub
 
 Tudo que for código deve estar no Git:
 
@@ -789,6 +789,67 @@ segredos
 ```
 
 O `.gitignore` deve contemplar esses arquivos.
+
+## Repositório remoto
+
+O código-fonte fica versionado no GitHub, em:
+
+```text
+https://github.com/ViniciosMSantos/pipeline_dados_v2
+```
+
+Repositório **privado**, já que pode conter referências a schemas/catálogos internos do Databricks (mesmo sem credenciais).
+
+## Estratégia de branches
+
+```text
+master (ou main)
+  │
+  ├── protegida: sem push direto de força, sem deleção
+  │
+  └── feature/<descrição>   → uma branch por etapa/modelo/DAG
+        │
+        ▼
+      Pull Request → revisão → merge em master
+```
+
+* `master` deve refletir sempre um estado funcional do projeto (ex.: `dbt build` passando).
+* Trabalho em andamento (novo modelo, novo DAG, ajuste de Dockerfile) deve ser feito em uma branch própria e integrado via Pull Request, não direto em `master`.
+
+## Convenção de commits
+
+Seguir [Conventional Commits](https://www.conventionalcommits.org/):
+
+```text
+feat:     nova funcionalidade (novo model, novo DAG, etc.)
+fix:      correção de bug
+docs:     documentação (README, doc_projeto.md)
+chore:    manutenção (dependências, configs, .gitignore)
+refactor: mudança de estrutura sem alterar comportamento
+test:     adição/ajuste de testes
+```
+
+Exemplo já usado no projeto: `feat: adiciona ambiente dbt com Docker`.
+
+## Proteção do repositório
+
+Depois do incidente em que o repositório remoto foi apagado acidentalmente e precisou ser recriado, ficam as seguintes recomendações:
+
+* Ativar **branch protection** em `master` (exigir Pull Request e impedir force-push/deleção da branch).
+* Evitar apagar o repositório pelo GitHub; se for necessário arquivar, preferir tornar o repo **privado** ou usar a opção **Archive**, que preserva o histórico.
+* Manter um clone local sempre atualizado (`git fetch`/`git pull` recorrente) como cópia de segurança adicional do histórico.
+* Antes de qualquer operação destrutiva (deletar repo, force-push, `git reset --hard`), confirmar que não há trabalho não sincronizado.
+
+## Tags e releases
+
+Marcos importantes do projeto (ex.: "dbt funcionando sozinho", "Docker funcionando", "primeiro DAG em produção") devem ser marcados com tags:
+
+```bash
+git tag -a v0.1.0 -m "dbt funcionando localmente (staging + testes)"
+git push origin v0.1.0
+```
+
+Isso facilita voltar a um estado conhecido caso algo quebre em etapas futuras.
 
 ---
 

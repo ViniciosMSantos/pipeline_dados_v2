@@ -24,6 +24,17 @@ pipeline_dados_v2/
 
 Detalhes do projeto dbt (camadas, convenções de nome, configuração de credenciais, comandos) estão em [dbt_core/README.md](dbt_core/README.md).
 
+## Versionamento
+
+Repositório: [github.com/ViniciosMSantos/pipeline_dados_v2](https://github.com/ViniciosMSantos/pipeline_dados_v2) (privado).
+
+- `master` deve sempre refletir um estado funcional do projeto; trabalho em andamento vai em branch `feature/<descrição>` e chega em `master` via Pull Request.
+- Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`).
+- Marcos do projeto (ex.: "dbt funcionando sozinho") são marcados com tags (`git tag -a v0.1.0 -m "..."`).
+- Nunca versionar `.env`, tokens, senhas ou `profiles.yml` — ver [.gitignore](.gitignore).
+
+Detalhes completos da estratégia de versionamento estão em [doc_projeto.md](doc_projeto.md#26-etapa-22--controle-de-versões-e-github).
+
 ## Status atual
 
 - ✅ Projeto dbt inicializado, com `sources` da camada Bronze declaradas ([dbt_core/models/bronze/source_silver.yml](dbt_core/models/bronze/source_silver.yml)).
