@@ -17,7 +17,15 @@ Princípio: o Airflow não contém lógica SQL. Ele apenas aciona o dbt, que é 
 ```text
 pipeline_dados_v2/
 ├── dbt_core/          # projeto dbt (models, sources, macros, seeds, snapshots, tests)
-├── docker/dbt/        # Dockerfile da imagem dbt (dbt-core + dbt-databricks)
+├── airflow/
+│   ├── dags/          # DAGs (ex.: dbt_customers.py)
+│   ├── logs/          # logs do Airflow (gerado em runtime, não versionado)
+│   └── plugins/
+├── docker/
+│   ├── dbt/           # Dockerfile da imagem dbt (dbt-core + dbt-databricks)
+│   └── airflow/       # Dockerfile da imagem do Airflow (+ Docker CLI)
+├── docker-compose.yml # sobe Postgres + Airflow (webserver/scheduler)
+├── .env.example       # template de variáveis (copiar para .env, não versionado)
 ├── .github/workflows/ # CI: builda a imagem dbt e valida a versão
 └── doc_projeto.md     # plano de implementação detalhado, etapa a etapa
 ```
@@ -38,11 +46,15 @@ Detalhes completos da estratégia de versionamento estão em [doc_projeto.md](do
 ## Status atual
 
 - ✅ Projeto dbt inicializado, com `sources` da camada Bronze declaradas ([dbt_core/models/bronze/source_silver.yml](dbt_core/models/bronze/source_silver.yml)).
-- ✅ Primeiro modelo Silver implementado: `slv_clientes`.
-- ✅ Dockerfile do dbt e CI básico no GitHub Actions.
-- ⏳ Pendente: demais modelos Silver, camada Gold, testes dbt, Airflow (DAGs), `docker-compose.yml` e integração real com Databricks.
+- ✅ Primeiro modelo Silver implementado: `slv_clientes` (com testes `not_null`).
+- ✅ Dockerfile do dbt, containerizado e validado contra o Databricks.
+- ✅ Stack de orquestração no ar: Airflow (webserver + scheduler + Postgres) via `docker-compose.yml`, com o primeiro DAG (`dbt_customers`) rodando o container dbt de ponta a ponta.
+- ✅ CI básico no GitHub Actions (builda a imagem dbt).
+- ⏳ Pendente: demais modelos Silver, camada Gold, mais testes dbt, mais DAGs, retries/alertas, separação formal dev/prod, CI/CD rodando `dbt build`/`test` de fato.
 
 ## Como rodar
+
+### 1. Só o dbt (mais rápido, sem Airflow)
 
 ```bash
 cd dbt_core
@@ -51,4 +63,55 @@ uv run dbt debug
 uv run dbt build --select slv_clientes
 ```
 
-Credenciais do Databricks ficam em `~/.dbt/profiles.yml` (fora do repositório) — nunca commitar tokens ou o arquivo `.env`.
+### 2. Stack completa (Docker + Airflow orquestrando o dbt)
+
+Pré-requisitos: Docker e Docker Compose instalados, e um `~/.dbt/profiles.yml` configurado (ver [dbt_core/README.md](dbt_core/README.md)).
+
+1. **Construir a imagem do dbt** (usada pelo Airflow para rodar os models):
+   ```bash
+   docker build -t pipeline-dbt:1.0 -f docker/dbt/Dockerfile .
+   ```
+
+2. **Criar o `.env`** a partir do template e preencher os valores:
+   ```bash
+   cp .env.example .env
+   ```
+   No `.env`, ajuste:
+   - `AIRFLOW_UID` → resultado de `id -u`
+   - `DOCKER_GID` → resultado de `getent group docker | cut -d: -f3`
+   - `DBT_DATABRICKS_TOKEN` → token do Databricks (target `dev`)
+   - `DBT_CORE_HOST_PATH` → caminho absoluto de `dbt_core` **no host** (ex.: `$(pwd)/dbt_core`)
+   - `DBT_PROFILES_HOST_PATH` → caminho absoluto do `~/.dbt` **no host**
+
+   > As tasks do Airflow rodam `docker run` contra o daemon do **host** (docker-outside-of-docker), por isso os dois últimos caminhos precisam ser reais do host, não do container do Airflow.
+
+3. **Subir a stack**:
+   ```bash
+   docker compose up -d --build
+   ```
+   Isso sobe, nessa ordem: `postgres` (metadata do Airflow) → `airflow-init` (migra o banco e cria o usuário admin, depois encerra) → `airflow-webserver` e `airflow-scheduler`.
+
+4. **Acompanhar até ficar saudável**:
+   ```bash
+   docker compose ps
+   ```
+   Espere `postgres` e `airflow-webserver` aparecerem como `healthy`.
+
+5. **Acessar a UI do Airflow**: [http://localhost:8080](http://localhost:8080)
+   Login padrão: `admin` / `admin` (ou os valores definidos em `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD` no `.env`).
+
+6. **Ativar e disparar o DAG** `dbt_customers` (pela UI, ou via CLI):
+   ```bash
+   docker compose exec airflow-scheduler airflow dags unpause dbt_customers
+   docker compose exec airflow-scheduler airflow dags trigger dbt_customers
+   ```
+
+7. **Ver os logs da task**: pela UI (Grid → task → Logs) ou em `airflow/logs/dag_id=dbt_customers/...`.
+
+8. **Derrubar a stack** quando terminar:
+   ```bash
+   docker compose down
+   ```
+   (os dados do Postgres ficam no volume `postgres-db-volume`; use `docker compose down -v` só se quiser apagar o histórico do Airflow também).
+
+Credenciais do Databricks ficam em `~/.dbt/profiles.yml` e no `.env` (ambos fora do repositório) — nunca commitar tokens, senhas ou esses arquivos.
