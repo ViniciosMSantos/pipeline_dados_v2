@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# dbt
+target/
+dbt_packages/
+logs/
+.partial_parse.msgpack
+
+# Credenciais dbt
+profiles.yml
+.dbt/
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Airflow
+airflow/logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

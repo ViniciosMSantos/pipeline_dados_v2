@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: slv_clientes
+    description: "Tabela de clientes tratados a partir da camada Bronze."
+
+    columns:
+      - name: customer_id
+        description: "Identificador do cliente no pedido."
+        tests:
+          - not_null
+
+      - name: customer_unique_id
+        description: "Identificador único do cliente."
+        tests:
+          - not_null
+
+      - name: customer_city
+        description: "Prefixo do CEP do cliente."
+
+      - name: customer_state
+        description: "Estado do cliente."

@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: "Camada Bronze com os dados brutos do e-commerce Olist."
+
+    database: dados_prod
+    schema: bronze
+
+    tables:
+      - name: brz_olist_customers
+        description: "Dados brutos de clientes do e-commerce Olist. Atenção: customer_id é único por pedido, não por cliente — use customer_unique_id para identificar o cliente real."
+
+      - name: brz_olist_geolocation
+        description: "Dados brutos de geolocalização por prefixo de CEP no Brasil. Atenção: não tem chave única — cada CEP prefix pode ter múltiplas linhas com coordenadas ligeiramente diferentes."
+
+      - name: brz_olist_order_items
+        description: "Dados brutos de itens dentro de cada pedido — um pedido pode ter múltiplos itens de vendedores diferentes."
+
+      - name: brz_olist_order_payments
+        description: "Dados brutos de pagamentos dos pedidos — um pedido pode ter múltiplos métodos/parcelas de pagamento."
+
+      - name: brz_olist_order_reviews
+        description: "Dados brutos de avaliações (reviews) deixadas pelos clientes após a entrega do pedido."
+
+      - name: brz_olist_products
+        description: "Dados brutos de produtos vendidos na plataforma Olist, incluindo categoria e dimensões físicas."
+
+      - name: brz_olist_sellers
+        description: "Dados brutos de vendedores (sellers) cadastrados na plataforma Olist."
+
+      - name: brz_orders
+        description: "Dados brutos de pedidos do Olist, incluindo status e datas de todo o ciclo de vida do pedido."
+
+      - name: brz_product_category_name_translation
+        description: "Tabela de tradução dos nomes de categorias de produtos, de português para inglês."

@@ -47,31 +47,22 @@ O Airflow deve ser responsável por:
 # 3. Arquitetura final esperada
 
 ```text
-                         ┌─────────────────────┐
-                         │       AIRFLOW       │
-                         │   Orquestração      │
-                         └──────────┬──────────┘
-                                    │
-                 ┌──────────────────┼──────────────────┐
-                 │                  │                  │
-                 ▼                  ▼                  ▼
-          DAG Customers       DAG Orders        DAG Products
-                 │                  │                  │
-                 └──────────────────┼──────────────────┘
+                                 GitHub
                                     │
                                     ▼
-                         ┌─────────────────────┐
-                         │        DBT          │
-                         │ Transformações SQL  │
-                         └──────────┬──────────┘
+                              versionamento
                                     │
+                           ┌────────┴────────┐
+                           ▼                 ▼
+                           dbt               Airflow
+                        1.12.3              X.Y.Z
+                           │                   │
+                           ▼                   ▼
+                     Docker Image        Docker Image
+                           │                   │
+                           └────────┬──────────┘
                                     ▼
-                         ┌─────────────────────┐
-                         │     DATABRICKS      │
-                         │                     │
-                         │ Bronze → Silver     │
-                         │          → Gold     │
-                         └──────────┬──────────┘
+                                 Databricks
                                     │
                                     ▼
                               ┌───────────┐
