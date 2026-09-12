@@ -5,18 +5,18 @@ models:
     description: "Tabela de clientes tratados a partir da camada Bronze."
 
     columns:
-      - name: customer_id
+      - name: id_cliente
         description: "Identificador do cliente no pedido."
         tests:
           - not_null
 
-      - name: customer_unique_id
+      - name: id_cliente_unico
         description: "Identificador único do cliente."
         tests:
           - not_null
 
-      - name: customer_city
+      - name: cidade_cliente
         description: "Prefixo do CEP do cliente."
 
-      - name: customer_state
+      - name: estado_cliente
         description: "Estado do cliente."
