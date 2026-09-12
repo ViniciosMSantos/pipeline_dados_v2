@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: slv_pedidos
+    description: "Tabela de pedidos tratados a partir da camada Bronze."
+
+    columns:
+      - name: id_pedido
+        description: "Identificador do pedido."
+        tests:
+          - not_null
+
+      - name: id_cliente
+        description: "Identificador do cliente no pedido."
+        tests:
+          - not_null
+
+      - name: data_pedido
+        description: "Data do pedido."
+
+      - name: data_aprovacao_pedido
+        description: "Data de aprovação do pedido."
+
+      - name: data_entrega_cliente
+        description: "Data de entrega do pedido ao cliente."
+
+      - name: data_estimada_entrega
+        description: "Data estimada de entrega do pedido ao cliente."
+      
+      - name: data_entrega_transportadora
+        description: "Data de entrega do pedido à transportadora."
+
+      - name: status_pedido
+        description: "Status do pedido."
