@@ -50,10 +50,15 @@ dbt_core/
 
 2. Ative o ambiente virtual:
    ```bash
+   # Linux/macOS
    source .venv/bin/activate
    ```
+   ```powershell
+   # Windows (PowerShell)
+   .venv\Scripts\Activate.ps1
+   ```
 
-3. Configure o arquivo de credenciais **`~/.dbt/profiles.yml`** (fica fora do repositório, nunca deve ser commitado). O nome do profile precisa bater com o campo `profile:` do [dbt_project.yml](dbt_project.yml) (`pipeline_dados`):
+3. Configure o arquivo de credenciais **`~/.dbt/profiles.yml`** (Windows: `%USERPROFILE%\.dbt\profiles.yml`, ou seja `C:\Users\<usuário>\.dbt\profiles.yml`) — fica fora do repositório, nunca deve ser commitado. O nome do profile precisa bater com o campo `profile:` do [dbt_project.yml](dbt_project.yml) (`pipeline_dados`):
    ```yaml
    pipeline_dados:
      target: dev
@@ -81,9 +86,16 @@ dbt_core/
 
 4. Exporte as variáveis de ambiente usadas acima antes de rodar o dbt (ajuste conforme o target usado):
    ```bash
+   # Linux/macOS
    export DBT_DATABRICKS_TOKEN="<personal access token>"      # target dev
    export DBX_SP_CLIENT_ID="<client id do service principal>"  # target prod
    export DBX_SP_CLIENT_SECRET="<client secret do service principal>"  # target prod
+   ```
+   ```powershell
+   # Windows (PowerShell) — só vale para a sessão atual do terminal
+   $env:DBT_DATABRICKS_TOKEN = "<personal access token>"      # target dev
+   $env:DBX_SP_CLIENT_ID = "<client id do service principal>"  # target prod
+   $env:DBX_SP_CLIENT_SECRET = "<client secret do service principal>"  # target prod
    ```
 
 5. Instale os pacotes declarados em [packages.yml](packages.yml) (ex.: `dbt_utils`):
@@ -101,6 +113,19 @@ dbt_core/
 ## Ambiente de teste (dev)
 
 Use o target `dev` sempre que for testar a criação/alteração de um modelo antes de liberar para produção. Ele lê a Bronze de `dados_prod` (ver aviso acima) e materializa Silver/Gold em `dados_dev`, isolado do catálogo de produção.
+
+### Checklist para testar do zero (primeira vez numa máquina nova)
+
+1. `cd dbt_core`
+2. `uv sync` — cria o `.venv` e instala as dependências Python (dbt-core, dbt-databricks etc.).
+3. Ative o `.venv` (comando do passo 2 de [Configuração do ambiente](#configuração-do-ambiente) acima, conforme o SO).
+4. Crie `~/.dbt/profiles.yml` (Windows: `%USERPROFILE%\.dbt\profiles.yml`) com os targets `dev`/`prod` — modelo no passo 3 de [Configuração do ambiente](#configuração-do-ambiente).
+5. Exporte `DBT_DATABRICKS_TOKEN` (passo 4 acima) — sem isso o `profiles.yml` não resolve o `env_var(...)` e a conexão falha.
+6. `dbt deps` — instala os pacotes de [packages.yml](packages.yml) (ex.: `dbt_utils`) em `dbt_packages/` (pasta local, não versionada; sem isso o `dbt build` falha com `Compilation Error: ... package(s) not found`).
+7. `dbt debug` — deve terminar em `All checks passed!`. Se falhar aqui, o problema é credencial/host/http_path, não modelo.
+8. `dbt build --target dev --select <nome_do_modelo>` — testa só o modelo em questão antes de rodar o projeto inteiro.
+
+> Os passos 2–6 só precisam ser refeitos quando o ambiente for recriado (máquina nova, `.venv` apagado) ou as dependências mudarem. No dia a dia, normalmente só os passos 3 (se abriu um terminal novo), 5 e 8 são necessários.
 
 ### Opção 1 — local (uv/dbt CLI)
 
@@ -129,7 +154,7 @@ docker run --rm \
   pipeline-dbt:1.0 build --target dev --select slv_clientes
 ```
 
-Ajuste os caminhos dos `-v` se o `profiles.yml` ou o `dbt_core/` não estiverem nesses locais (são os mesmos `DBT_CORE_HOST_PATH`/`DBT_PROFILES_HOST_PATH` usados pelo `docker-compose.yml` do Airflow — ver [.env.example](../.env.example)).
+Ajuste os caminhos dos `-v` se o `profiles.yml` ou o `dbt_core/` não estiverem nesses locais (são os mesmos `DBT_CORE_HOST_PATH`/`DBT_PROFILES_HOST_PATH` usados pelo `docker-compose.yml` do Airflow — ver [.env.example](../.env.example)). No Windows, troque `$HOME` por `%USERPROFILE%` (cmd) ou `$env:USERPROFILE` (PowerShell).
 
 ## Comandos principais do dbt
 
