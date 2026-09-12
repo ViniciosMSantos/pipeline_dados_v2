@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, pipeline-dados]
+
+    steps:
+      - name: Sincronizar working tree com a master
+        run: |
+          cd /home/vinicios_santos/pipeline_dados_v2
+          git fetch origin master
+          git reset --hard origin/master
+
+      - name: Rebuild da imagem dbt
+        run: |
+          cd /home/vinicios_santos/pipeline_dados_v2
+          docker build -t pipeline-dbt:1.0 -f docker/dbt/Dockerfile .
+
+      - name: Atualizar stack do Airflow
+        run: |
+          cd /home/vinicios_santos/pipeline_dados_v2
+          docker compose up -d --build
+
+      - name: Limpar imagens intermediárias antigas
+        run: docker image prune -f

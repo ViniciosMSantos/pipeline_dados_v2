@@ -116,3 +116,24 @@ Pré-requisitos: Docker e Docker Compose instalados, e um `~/.dbt/profiles.yml` 
    (os dados do Postgres ficam no volume `postgres-db-volume`; use `docker compose down -v` só se quiser apagar o histórico do Airflow também).
 
 Credenciais do Databricks ficam em `~/.dbt/profiles.yml` e no `.env` (ambos fora do repositório) — nunca commitar tokens, senhas ou esses arquivos.
+
+### 3. Deploy automático
+
+Todo push/merge na `master` dispara o workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), que roda em um **self-hosted runner do GitHub Actions** instalado nesta própria máquina (`~/actions-runner`, serviço systemd `actions.runner.ViniciosMSantos-pipeline_dados_v2.*`). O workflow:
+
+1. Sincroniza `/home/vinicios_santos/pipeline_dados_v2` com `origin/master` via `git reset --hard` — **qualquer edição feita direto nesta máquina, fora do Git, é descartada no próximo deploy**.
+2. Rebuilda a imagem `pipeline-dbt:1.0`.
+3. Roda `docker compose up -d --build` para atualizar os serviços do Airflow.
+
+Comandos úteis:
+```bash
+# Ver status do runner
+sudo systemctl status "actions.runner.ViniciosMSantos-pipeline_dados_v2.*"
+
+# Reinstalar o runner do zero (ex.: máquina reformatada)
+# 1. Gere um token em Settings > Actions > Runners > New self-hosted runner no GitHub
+# 2. mkdir -p ~/actions-runner && cd ~/actions-runner
+# 3. Baixe e extraia o pacote linux-x64 da release mais recente de actions/runner
+# 4. ./config.sh --url https://github.com/ViniciosMSantos/pipeline_dados_v2 --token <TOKEN>
+# 5. sudo ./svc.sh install && sudo ./svc.sh start
+```
