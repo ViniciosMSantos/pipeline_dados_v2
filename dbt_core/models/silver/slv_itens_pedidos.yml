@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: slv_itens_pedidos
+    description: "Tabela de itens de pedidos tratados a partir da camada Bronze."
+
+    columns:
+      - name: id_pedido
+        description: "Identificador do pedido."
+        tests:
+          - not_null
+
+      - name: id_item
+        description: "Identificador do item no pedido."
+        tests:
+          - not_null
+
+      - name: id_produto
+        description: "Identificador do produto no item do pedido."
+
+      - name: id_vendedor
+        description: "Identificador do vendedor no item do pedido."
+
+      - name: prazo_entrega
+        description: "Prazo de entrega do item do pedido."
+
+      - name: preco_produto
+        description: "Preço do produto no item do pedido."
+
+      - name: preco_frete
+        description: "Preço do frete no item do pedido."
