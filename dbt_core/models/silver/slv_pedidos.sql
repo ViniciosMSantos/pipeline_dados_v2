@@ -1,6 +1,5 @@
 {{config(
-        materialized='table',
-        schema='silver'
+        materialized='table'
 ) }}
 
 SELECT 
@@ -23,4 +22,4 @@ SELECT
     CAST(order_delivered_customer_date AS TIMESTAMP) AS data_entrega_cliente,
     CAST(order_estimated_delivery_date AS TIMESTAMP) AS data_estimada_entrega
 
-FROM source('bronze', 'brz_olist_orders')
+FROM source('bronze', 'brz_orders')

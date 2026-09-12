@@ -96,6 +96,41 @@ dbt_core/
    dbt debug
    ```
 
+> ⚠️ **Bronze é fixa em prod**: a source declarada em [models/bronze/source_silver.yml](models/bronze/source_silver.yml) usa `database: dados_prod` fixo, independente do `target` ativo — a Bronze é carregada fora do dbt e só existe no catálogo de produção. Isso é intencional: rodar com `--target dev` não cria uma cópia da Bronze em dev, apenas faz o dbt **ler** os dados brutos de prod e **escrever** as tabelas Silver/Gold no catálogo `dados_dev`, isolado de produção. É o suficiente para testar a criação/lógica das tabelas sem arriscar o schema de prod.
+
+## Ambiente de teste (dev)
+
+Use o target `dev` sempre que for testar a criação/alteração de um modelo antes de liberar para produção. Ele lê a Bronze de `dados_prod` (ver aviso acima) e materializa Silver/Gold em `dados_dev`, isolado do catálogo de produção.
+
+### Opção 1 — local (uv/dbt CLI)
+
+Com o ambiente configurado (seção anterior) e `DBT_DATABRICKS_TOKEN` exportado:
+
+```bash
+dbt build --target dev --select slv_clientes   # roda seed+run+test só desse modelo
+dbt build --target dev                         # roda o projeto inteiro em dev
+```
+
+`dev` é o `target` padrão do `profiles.yml` do exemplo acima, então basta omitir `--target dev` se ele já for o `target:` default do seu profile.
+
+### Opção 2 — via Docker (mesmo fluxo do Airflow)
+
+Reproduz localmente o mesmo container que as DAGs (`airflow/dags/dbt_orders.py`, `dbt_customers.py`) rodam em prod, só trocando o target:
+
+```bash
+# 1. Build da imagem (uma vez, ou sempre que o Dockerfile/dbt_core mudar)
+docker build -t pipeline-dbt:1.0 -f docker/dbt/Dockerfile .
+
+# 2. Rodar build em dev contra o mesmo profiles.yml usado localmente
+docker run --rm \
+  -e DBT_DATABRICKS_TOKEN="$DBT_DATABRICKS_TOKEN" \
+  -v "$(pwd)/dbt_core":/usr/app \
+  -v "$HOME/.dbt":/root/.dbt \
+  pipeline-dbt:1.0 build --target dev --select slv_clientes
+```
+
+Ajuste os caminhos dos `-v` se o `profiles.yml` ou o `dbt_core/` não estiverem nesses locais (são os mesmos `DBT_CORE_HOST_PATH`/`DBT_PROFILES_HOST_PATH` usados pelo `docker-compose.yml` do Airflow — ver [.env.example](../.env.example)).
+
 ## Comandos principais do dbt
 
 | Comando | O que faz |
@@ -116,9 +151,10 @@ dbt_core/
 
 ## CI/CD
 
-O workflow [.github/workflows/databricks-ci.yml](.github/workflows/databricks-ci.yml) roda a cada push na branch `main`: instala o `dbt-databricks`, roda `dbt deps` e depois `dbt run --profiles-dir . --target prod`.
+- [.github/workflows/dbt-ci.yml](../.github/workflows/dbt-ci.yml): roda em push/PR para `master`. Só builda a imagem `pipeline-dbt:1.0` (`docker build -f docker/dbt/Dockerfile .`) e confere `dbt --version` dentro dela — **não** conecta no Databricks nem roda modelos, então não substitui testar em `dev` antes de mergear (ver seção [Ambiente de teste (dev)](#ambiente-de-teste-dev) acima).
+- [.github/workflows/deploy.yml](../.github/workflows/deploy.yml): roda em push para `master`, em um runner self-hosted (`pipeline-dados`). Sincroniza a working tree com `origin/master` (`git reset --hard`), reconstrói a imagem `pipeline-dbt:1.0` e sobe a stack do Airflow (`docker compose up -d --build`) — é o Airflow dessa stack (DAGs `dbt_orders`/`dbt_customers`, `--target prod`) quem de fato materializa em produção, não o workflow do GitHub em si.
 
-> ⚠️ **Atenção**: esse workflow, do jeito que está hoje, não deve funcionar. Ele usa `--profiles-dir .` (ou seja, espera um `profiles.yml` dentro do repositório), mas o `profiles.yml` foi removido do versionamento (corretamente, por conter credenciais) e não existe no repo. Além disso, os secrets usados no workflow (`DATABRICKS_HOST`, `DATABRICKS_TOKEN`, `DATABRICKS_HTTP_PATH`) não correspondem às variáveis que o `profiles.yml` local espera para o target `prod` (`DBX_SP_CLIENT_ID` e `DBX_SP_CLIENT_SECRET`, com host/http_path fixos no arquivo). Antes de confiar nesse pipeline, é preciso gerar um `profiles.yml` dentro do job (por exemplo, com um passo que escreve o arquivo a partir dos secrets do GitHub) e alinhar os nomes das variáveis de ambiente.
+> ⚠️ Como nenhum dos dois workflows roda `dbt build`/`dbt test` contra o Databricks, um erro de modelo (SQL, teste, referência quebrada) só aparece quando a DAG do Airflow rodar em prod. Rode `dbt build --target dev` (ou a variante Docker acima) localmente antes de mergear para `master`.
 
 ### Resources
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
