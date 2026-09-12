@@ -20,6 +20,7 @@ profiles.yml
 
 # Airflow
 airflow/logs/
+backup_airflow_metadata_*.sql
 
 # IDE
 .vscode/
