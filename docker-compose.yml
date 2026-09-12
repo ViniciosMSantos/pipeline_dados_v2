@@ -7,7 +7,22 @@ x-airflow-common: &airflow-common
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "false"
+    AIRFLOW__API__EXPOSE_CONFIG: "false"
+    # Equivalente mais próximo do antigo AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT
+    # (não existe mais "master timeout" no api-server); mantém margem generosa
+    # de boot pelo mesmo motivo do fix original em 2.x.
+    AIRFLOW__API__WORKER_TIMEOUT: "300"
+    # FAB deixou de ser o auth manager padrão no Airflow 3 (agora é o
+    # SimpleAuthManager); mantido explicitamente para preservar o login
+    # fixo admin/admin via `airflow users create`.
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    # No Airflow 3 as tasks falam com o api-server via HTTP (Task Execution
+    # API) em vez de acessar o banco direto; sem isso o cliente tenta
+    # "localhost:8080", que não existe no container do scheduler/dag-processor.
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-api-server:8080/execution/
+    # Precisa ser idêntico entre scheduler, dag-processor e api-server para
+    # validar os tokens JWT da Task Execution API entre containers.
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
     # Repassados para dentro das tasks (BashOperator) que chamam `docker run` no host,
     # por isso precisam ser caminhos do HOST, não do container do Airflow.
     DBT_DATABRICKS_TOKEN: ${DBT_DATABRICKS_TOKEN:-}
@@ -43,10 +58,18 @@ services:
 
   airflow-init:
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      # A imagem 3.x resolve o pacote `airflow` via site-packages do usuário
+      # (baseado em $HOME); como este serviço roda como root (user: "0:0")
+      # e pula o entrypoint padrão, $HOME viraria /root e o `airflow` CLI
+      # não encontraria o próprio módulo.
+      HOME: /home/airflow
     entrypoint: /bin/bash
     command:
       - -c
       - |
+        airflow config update --fix
         airflow db migrate
         airflow users create \
           --username "${_AIRFLOW_WWW_USER_USERNAME:-admin}" \
@@ -58,13 +81,13 @@ services:
         chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/{dags,logs,plugins}
     user: "0:0"
 
-  airflow-webserver:
+  airflow-api-server:
     <<: *airflow-common
-    command: webserver
+    command: api-server
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -76,6 +99,14 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    restart: always
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
     restart: always
     depends_on:
       airflow-init:

@@ -24,7 +24,7 @@ pipeline_dados_v2/
 ├── docker/
 │   ├── dbt/           # Dockerfile da imagem dbt (dbt-core + dbt-databricks)
 │   └── airflow/       # Dockerfile da imagem do Airflow (+ Docker CLI)
-├── docker-compose.yml # sobe Postgres + Airflow (webserver/scheduler)
+├── docker-compose.yml # sobe Postgres + Airflow (api-server/scheduler/dag-processor)
 ├── .env.example       # template de variáveis (copiar para .env, não versionado)
 ├── .github/workflows/ # CI: builda a imagem dbt e valida a versão
 └── doc_projeto.md     # plano de implementação detalhado, etapa a etapa
@@ -48,7 +48,7 @@ Detalhes completos da estratégia de versionamento estão em [doc_projeto.md](do
 - ✅ Projeto dbt inicializado, com `sources` da camada Bronze declaradas ([dbt_core/models/bronze/source_silver.yml](dbt_core/models/bronze/source_silver.yml)).
 - ✅ Primeiro modelo Silver implementado: `slv_clientes` (com testes `not_null`).
 - ✅ Dockerfile do dbt, containerizado e validado contra o Databricks.
-- ✅ Stack de orquestração no ar: Airflow (webserver + scheduler + Postgres) via `docker-compose.yml`, com o primeiro DAG (`dbt_customers`) rodando o container dbt de ponta a ponta.
+- ✅ Stack de orquestração no ar: Airflow 3.3.1 (api-server + scheduler + dag-processor + Postgres) via `docker-compose.yml`, com o primeiro DAG (`dbt_customers`) rodando o container dbt de ponta a ponta.
 - ✅ CI básico no GitHub Actions (builda a imagem dbt).
 - ⏳ Pendente: demais modelos Silver, camada Gold, mais testes dbt, mais DAGs, retries/alertas, separação formal dev/prod, CI/CD rodando `dbt build`/`test` de fato.
 
@@ -82,6 +82,7 @@ Pré-requisitos: Docker e Docker Compose instalados, e um `~/.dbt/profiles.yml` 
    - `DBT_DATABRICKS_TOKEN` → token do Databricks (target `dev`)
    - `DBT_CORE_HOST_PATH` → caminho absoluto de `dbt_core` **no host** (ex.: `$(pwd)/dbt_core`)
    - `DBT_PROFILES_HOST_PATH` → caminho absoluto do `~/.dbt` **no host**
+   - `AIRFLOW_JWT_SECRET` → segredo aleatório usado pela Task Execution API do Airflow 3 (gere com `python3 -c "import secrets; print(secrets.token_hex(32))"`)
 
    > As tasks do Airflow rodam `docker run` contra o daemon do **host** (docker-outside-of-docker), por isso os dois últimos caminhos precisam ser reais do host, não do container do Airflow.
 
@@ -89,13 +90,13 @@ Pré-requisitos: Docker e Docker Compose instalados, e um `~/.dbt/profiles.yml` 
    ```bash
    docker compose up -d --build
    ```
-   Isso sobe, nessa ordem: `postgres` (metadata do Airflow) → `airflow-init` (migra o banco e cria o usuário admin, depois encerra) → `airflow-webserver` e `airflow-scheduler`.
+   Isso sobe, nessa ordem: `postgres` (metadata do Airflow) → `airflow-init` (migra o banco e cria o usuário admin, depois encerra) → `airflow-api-server`, `airflow-scheduler` e `airflow-dag-processor`.
 
 4. **Acompanhar até ficar saudável**:
    ```bash
    docker compose ps
    ```
-   Espere `postgres` e `airflow-webserver` aparecerem como `healthy`.
+   Espere `postgres` e `airflow-api-server` aparecerem como `healthy`.
 
 5. **Acessar a UI do Airflow**: [http://localhost:8080](http://localhost:8080)
    Login padrão: `admin` / `admin` (ou os valores definidos em `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD` no `.env`).
