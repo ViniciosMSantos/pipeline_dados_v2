@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: slv_itens_pedidos
+  - name: slv_olist_itens_pedidos
     description: "Tabela de itens de pedidos tratados a partir da camada Bronze."
 
     columns:

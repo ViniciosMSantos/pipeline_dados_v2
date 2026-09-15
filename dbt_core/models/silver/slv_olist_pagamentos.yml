@@ -1,0 +1,22 @@
+version: 2
+models:
+  - name: slv_olist_pagamentos
+    description: "Tabela de pagamentos tratados a partir da camada Bronze."
+
+    columns:
+      - name: id_pedido
+        description: "Identificador do pedido."
+        tests:
+          - not_null
+
+      - name: tipo_pagamento
+        description: "Tipo de pagamento no pedido."
+
+      - name: valor_pagamento
+        description: "Valor do pagamento no pedido."
+
+      - name: parcelas_pagamento
+        description: "Número de parcelas do pagamento no pedido."
+
+      - name: sequencia_pagamento
+        description: "Sequência do pagamento no pedido."

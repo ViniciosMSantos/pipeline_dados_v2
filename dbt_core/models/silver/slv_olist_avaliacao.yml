@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: slv_olist_avaliacao
+    description: "Tabela de avaliações tratadas a partir da camada Bronze."
+
+    columns:
+      - name: id_avaliacao
+        description: "Identificador da avaliação."
+        tests:
+          - not_null
+
+      - name: id_pedido
+        description: "Identificador do pedido."
+        tests:
+          - not_null
+
+      - name: nota_avaliacao
+        description: "Nota da avaliação do pedido."
+
+      - name: titulo_avaliacao
+        description: "Título da avaliação do pedido."
+
+      - name: comentario_avaliacao
+        description: "Comentário da avaliação do pedido."
+
+      - name: data_avaliacao
+        description: "Data da avaliação do pedido."
+      
+      - name: data_resposta_avaliacao
+        description: "Data da resposta da avaliação do pedido."

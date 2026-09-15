@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: slv_olist_cidades
+    description: "Tabela de cidades tratadas a partir da camada Bronze."
+
+    columns:
+
+      - name: nome_cidade
+        description: "Nome da cidade."
+        tests:
+          - not_null
+
+      - name: estado_cidade
+        description: "Estado da cidade."
+        tests:
+          - not_null
+
+      - name: cep_cidade
+        description: "Prefixo do CEP da cidade."
+        tests:
+          - not_null
+
+      - name: latitude_cidade
+        description: "Latitude da cidade."
+
+      - name: longitude_cidade
+        description: "Longitude da cidade."

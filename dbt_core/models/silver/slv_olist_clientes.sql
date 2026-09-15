@@ -1,5 +1,7 @@
 {{ config(
-    materialized='table'
+    materialized='table',
+    schema='silver',
+    alias='slv_olist_clientes'
 ) }}
 
 SELECT

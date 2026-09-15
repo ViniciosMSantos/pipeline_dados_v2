@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: slv_clientes
+  - name: slv_olist_clientes
     description: "Tabela de clientes tratados a partir da camada Bronze."
 
     columns:
