@@ -1,0 +1,26 @@
+version: 2
+models:
+  - name: slv_olist_vendedores
+    description: "Tabela de vendedores tratada a partir da camada Bronze."
+
+    columns:
+
+      - name: id_vendedor
+        description: "Identificador do vendedor."
+        tests:
+          - not_null
+
+      - name: cep_vendedor
+        description: "Prefixo do CEP do vendedor."
+        tests:
+          - not_null
+
+      - name: cidade_vendedor
+        description: "Cidade do vendedor."
+        tests:
+          - not_null
+
+      - name: estado_vendedor
+        description: "Estado do vendedor."
+        tests:
+          - not_null

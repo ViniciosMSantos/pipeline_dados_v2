@@ -1,0 +1,36 @@
+version: 2
+models:
+  - name: slv_olist_produtos
+    description: "Tabela de produtos tratados a partir da camada Bronze."
+
+    columns:
+      - name: id_produto
+        description: "Identificador do produto."
+        tests:
+          - not_null
+
+      - name: categoria_produto
+        description: "Categoria do produto."
+
+      - name: tamanho_momento_produto
+        description: "Tamanho do produto no momento da compra."
+
+      - name: tamanho_descricao_produto
+        description: "Descrição do tamanho do produto."
+
+      - name: quantidade_fotos_produto
+        description: "Quantidade de fotos do produto."
+      
+      - name: peso_produto
+        description: "Peso do produto."
+
+      - name: comprimento_produto
+        description: "Comprimento do produto."
+      
+      - name: altura_produto
+        description: "Altura do produto."
+
+      - name: largura_produto
+        description: "Largura do produto."
+        
+      
