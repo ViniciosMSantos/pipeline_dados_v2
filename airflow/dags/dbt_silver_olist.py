@@ -21,6 +21,11 @@ with DAG(
     schedule="0 10 * * *",
     catchup=False,
     tags=["dbt", "silver"],
+    # Cada task sobe um container `docker run` isolado (dbt debug + build);
+    # rodar as 8 em paralelo satura a CPU do host (WSL2 com 4 vCPUs) e o
+    # heartbeat da task atrasa o suficiente pro Airflow matar com SIGTERM
+    # antes do dbt terminar. Limita quantas rodam ao mesmo tempo.
+    max_active_tasks=3,
 ) as dag:
     for model in SILVER_MODELS:
         BashOperator(
