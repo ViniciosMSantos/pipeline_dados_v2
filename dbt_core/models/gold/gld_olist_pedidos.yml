@@ -1,0 +1,72 @@
+version: 2
+models:
+  - name: gld_olist_pedidos
+    description: "Tabela de pedidos tratada a partir da camada Silver."
+
+    columns:
+      - name: id_pedido
+        description: "Identificador do pedido."
+        tests:
+          - not_null
+
+      - name: id_cliente
+        description: "Identificador do cliente que realizou o pedido."
+        tests:
+          - not_null
+
+      - name: status_pedido
+        description: "Status do pedido."
+
+      - name: valor_total_produtos
+        description: "Valor total dos produtos do pedido."
+
+      - name: valor_total_fretes
+        description: "Valor total dos fretes dos pedidos realizados pelo cliente."
+
+      - name: valor_total_pedidos
+        description: "Valor total dos pedidos realizados pelo cliente."
+
+      - name: qtd_itens
+        description: "Quantidade de itens do pedido."
+
+      - name: data_pedido
+        description: "Data em que o pedido foi realizado."
+
+      - name: data_hora_pedido
+        description: "Data e hora em que o pedido foi realizado."
+
+      - name: data_aprovacao_pedido
+        description: "Data em que o pedido foi aprovado."
+
+      - name: data_entrega_transportadora
+        description: "Data em que o pedido foi entregue à transportadora."
+
+      - name: data_entrega_cliente
+        description: "Data em que o pedido foi entregue ao cliente."
+
+      - name: data_estimada_entrega
+        description: "Data estimada para a entrega do pedido."
+
+      - name: cidade_cliente
+        description: "Cidade do cliente que realizou o pedido."
+
+      - name: estado_cliente
+        description: "Estado do cliente que realizou o pedido."
+
+      - name: dias_entrega
+        description: "Quantidade de dias entre a data de aprovação do pedido e a data de entrega ao cliente."
+
+      - name: dias_previsao_entrega
+        description: "Quantidade de dias entre a data de aprovação do pedido e a data estimada para entrega."
+
+      - name: dias_atraso
+        description: "Quantidade de dias entre a data estimada para entrega e a data de entrega ao cliente. Caso o pedido tenha sido entregue antes da data estimada, o valor será negativo."
+      
+      - name: pedido_entregue
+        description: "Indica se o pedido foi entregue ou não."
+
+      - name: pedido_cancelado
+        description: "Indica se o pedido foi cancelado ou não."
+
+      - name: pedido_entregue_atrasado
+        description: "Indica se o pedido foi entregue atrasado ou não."
