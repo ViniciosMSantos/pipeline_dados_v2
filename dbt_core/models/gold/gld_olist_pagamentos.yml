@@ -1,0 +1,20 @@
+version: 2
+models:
+  - name: gld_olist_pagamentos
+    description: "Tabela de pagamentos tratada a partir da camada Silver."
+
+    columns:
+      - name: id_pedido
+        description: "Id do pedido"
+
+      - name: tipo_pagamento
+        description: "Forma de pagamento"
+
+      - name: parcelas_pagamento
+        description: "Quantidade de parcelas do pagamento"
+
+      - name: valor_pagamento
+        description: "Valor da parcela"
+
+      - name: sequencia_pagamento
+        description: "Sequencia da Parcela do pagamento"
