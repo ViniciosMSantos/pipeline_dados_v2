@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: gld_olist_avaliacoes
+    description: "Avaliações dos produtos da Olist"
+    columns:
+      - name: id_avaliacao
+        description: "ID da avaliação"
+
+      - name: id_pedido
+        description: "ID do pedido"
+
+      - name: nota_avaliacao
+        description: "Nota da avaliação"
+
+      - name: titulo_avaliacao
+        description: "Titulo da Avaliação"
+
+      - name: comentario_avaliacao
+        description: "Comentário da avaliação"
+
+      - name: data_avaliacao
+        description: "Data da Avaliação"
+
+      - name: data_resposta_avaliacao
+        description: "Data da Resposta da avaliação"

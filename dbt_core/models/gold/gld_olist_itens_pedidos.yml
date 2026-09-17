@@ -1,0 +1,32 @@
+version: 2
+models:
+  - name: gld_olist_itens_pedidos
+    description: "Tabela de itens de pedidos tratada a partir da camada Silver."
+
+    columns:
+      - name: id_pedido
+        description: "Identificador Unico do pedido"
+
+      - name: id_item
+        description: "Identificador Unico do Item"
+
+      - name: id_produto
+        description: "Identificador Unico do Produto"
+
+      - name: preco_produto
+        description: "Preço do item pedido"
+
+      - name: preco_frete
+        description: "Preço do frete do item"
+
+      - name: preco_total_produto
+        description: "Preço total do item pedido ('Soma de preço e frete')"
+
+      - name: categoria_produto
+        description: "Categoria do item pedido"
+
+      - name: cidade_vendedor
+        description: "Cidade do vendedor"
+
+      - name: estado_vendedor
+        description: "Estado do vendedor"
