@@ -10,6 +10,7 @@ with pedidos as (
     select
         pedidos.id_pedido,
         clientes.id_cliente,
+        clientes.id_cliente_unico,
         pedidos.status_pedido,
         round(sum(itens.preco_produto), 2) as valor_total_produtos,
         round(sum(itens.preco_frete), 2) as valor_total_frete,
@@ -44,6 +45,7 @@ with pedidos as (
                 group by 
                         pedidos.id_pedido,
                         clientes.id_cliente,
+                        clientes.id_cliente_unico,
                         pedidos.status_pedido,
                         pedidos.data_pedido,
                         pedidos.data_aprovacao_pedido,
@@ -58,6 +60,7 @@ with pedidos as (
 select
     id_pedido,
     id_cliente,
+    id_cliente_unico,
     status_pedido,
     valor_total_produtos,
     valor_total_frete,
