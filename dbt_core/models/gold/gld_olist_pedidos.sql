@@ -90,4 +90,4 @@ select
     end as pedido_entrega_atrasado
 
 from pedidos
-    where date_format(data_pedido, 'yyyy-MM') <= '2018-08'  
+    where date_format(data_pedido, 'yyyy-MM-dd') <= '2018-08-29'  
