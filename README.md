@@ -1,4 +1,5 @@
 # pipeline_dados_v2
+<img width="1921" height="947" alt="Captura de tela 2026-09-30 123847" src="https://github.com/user-attachments/assets/c41bd5cb-1efc-4e2c-9117-3c45f965d507" />
 
 Pipeline de dados modular para o e-commerce **Olist**, construído com **Databricks**, **dbt**, **Airflow** e **Docker**, com **Power BI** como camada de consumo.
 
