@@ -1,0 +1,70 @@
+name: dbt Slim CI
+
+# Em cada PR, builda só os models alterados (+ dependentes) com --empty
+# (SQL executado no Databricks com 0 linhas) e --defer para a produção.
+# Roda no self-hosted porque usa o ~/.dbt/profiles.yml e o .env do servidor.
+
+on:
+  pull_request:
+    branches:
+      - master
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: dbt-slim-ci-${{ github.event.number }}
+  cancel-in-progress: true
+
+env:
+  DBT_CI_SCHEMA: ci_pr_${{ github.event.number }}
+  DBT_STATE_DIR: /home/vinicios_santos/dbt-state
+  ENV_FILE: /home/vinicios_santos/pipeline_dados_v2/.env
+
+jobs:
+  slim-ci:
+    if: github.event.action != 'closed'
+    runs-on: [self-hosted, pipeline-dados]
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: dbt deps
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$GITHUB_WORKSPACE/dbt_core":/usr/app \
+            pipeline-dbt:1.0 deps
+
+      - name: dbt build (state:modified+ --defer --empty)
+        run: |
+          set -a; . "$ENV_FILE"; set +a
+          DOCKER="docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp \
+            -e DBT_DATABRICKS_TOKEN -e DBX_SP_CLIENT_ID -e DBX_SP_CLIENT_SECRET \
+            -e DBT_CI_SCHEMA \
+            -v $GITHUB_WORKSPACE/dbt_core:/usr/app \
+            -v $HOME/.dbt:/root/.dbt:ro \
+            -v $DBT_STATE_DIR:/state:ro \
+            pipeline-dbt:1.0"
+          if [ -f "$DBT_STATE_DIR/manifest.json" ]; then
+            $DOCKER --profiles-dir /root/.dbt build --target ci \
+              --select state:modified+ --defer --state /state --empty
+          else
+            echo "::warning::Manifest de produção não encontrado em $DBT_STATE_DIR; rodando só dbt parse. Faça um push na master para gerá-lo."
+            $DOCKER --profiles-dir /root/.dbt parse --target ci
+          fi
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: [self-hosted, pipeline-dados]
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Remover schemas do PR
+        run: |
+          set -a; . "$ENV_FILE"; set +a
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e DBT_DATABRICKS_TOKEN -e DBT_CI_SCHEMA \
+            -v "$GITHUB_WORKSPACE/dbt_core":/usr/app \
+            -v "$HOME/.dbt":/root/.dbt:ro \
+            pipeline-dbt:1.0 --profiles-dir /root/.dbt run-operation drop_ci_schemas --target ci
