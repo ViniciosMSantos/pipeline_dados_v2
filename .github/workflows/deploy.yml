@@ -21,6 +21,18 @@ jobs:
           cd /home/vinicios_santos/pipeline_dados_v2
           docker build -t pipeline-dbt:1.0 -f docker/dbt/Dockerfile .
 
+      - name: Gerar manifest de produção (estado do Slim CI)
+        run: |
+          cd /home/vinicios_santos/pipeline_dados_v2
+          set -a; . ./.env; set +a
+          mkdir -p /home/vinicios_santos/dbt-state
+          docker run --rm \
+            -e DBT_DATABRICKS_TOKEN -e DBX_SP_CLIENT_ID -e DBX_SP_CLIENT_SECRET \
+            -v "$PWD/dbt_core":/usr/app \
+            -v /home/vinicios_santos/.dbt:/root/.dbt \
+            -v /home/vinicios_santos/dbt-state:/state \
+            pipeline-dbt:1.0 parse --target prod --target-path /state
+
       - name: Atualizar stack do Airflow
         run: |
           cd /home/vinicios_santos/pipeline_dados_v2
