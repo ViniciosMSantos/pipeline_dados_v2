@@ -66,5 +66,5 @@ jobs:
           docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e DBT_PROFILES_DIR=/profiles \
             -e DBT_DATABRICKS_TOKEN -e DBT_CI_SCHEMA \
             -v "$GITHUB_WORKSPACE/dbt_core":/usr/app \
-            -v "$HOME/.dbt":/root/.dbt:ro \
+            -v "$HOME/.dbt":/profiles:ro \
             pipeline-dbt:1.0 run-operation drop_ci_schemas --target ci
