@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: gold_olist_avaliacoes_deduplicado
+    description: >
+      Avaliações dos pedidos da Olist. Uma linha por pedido.
+      Quando um pedido possui mais de uma avaliação, mantém a mais recente.
+    columns:
+      - name: id_pedido
+        description: "ID do pedido. Chave única da tabela."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: id_avaliacao
+        description: "ID da avaliação."
+        data_tests:
+          - not_null
+
+      - name: nota_avaliacao
+        description: "Nota da avaliação, de 1 a 5."
+        data_tests:
+          - not_null
+
+      - name: titulo_avaliacao
+        description: "Título da avaliação (opcional)."
+
+      - name: comentario_avaliacao
+        description: "Comentário da avaliação (opcional)."
+
+      - name: data_avaliacao
+        description: "Data de criação da avaliação."
+        data_tests:
+          - not_null
+
+      - name: data_resposta_avaliacao
+        description: "Data de resposta da avaliação."
