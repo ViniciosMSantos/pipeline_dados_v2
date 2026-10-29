@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: gold_olist_avaliacoes_deduplicado
+  - name: gld_olist_avaliacoes_deduplicado
     description: >
       Avaliações dos pedidos da Olist. Uma linha por pedido.
       Quando um pedido possui mais de uma avaliação, mantém a mais recente.

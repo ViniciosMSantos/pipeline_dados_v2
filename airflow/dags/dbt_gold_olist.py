@@ -8,7 +8,9 @@ MODELOS_GOLD = [
     "gld_olist_pedidos",
     "gld_olist_avaliacoes",
     "gld_olist_pagamentos",
-    "gld_olist_itens_pedidos"
+    "gld_olist_itens_pedidos",
+    "gld_olist_avaliacoes_deduplicado"
+
 ]
 
 # Assets (tabelas silver) que o gld_olist_pedidos consome via ref() no dbt.
