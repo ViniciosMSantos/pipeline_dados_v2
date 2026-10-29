@@ -2,7 +2,7 @@
 config(
     materialized='table',
     schema='gold',
-    alias='gold_olist_avaliacoes_deduplicado'
+    alias='gld_olist_avaliacoes_deduplicado'
 )
 }}
 
