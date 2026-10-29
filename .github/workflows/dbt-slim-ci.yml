@@ -12,7 +12,8 @@ on:
 
 concurrency:
   group: dbt-slim-ci-${{ github.event.number }}
-  cancel-in-progress: true
+  # o evento 'closed' (merge) espera o build em andamento em vez de cancelá-lo
+  cancel-in-progress: ${{ github.event.action != 'closed' }}
 
 env:
   DBT_CI_SCHEMA: ci_pr_${{ github.event.number }}
@@ -58,6 +59,12 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
+      - name: dbt deps
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e DBT_PROFILES_DIR=/usr/app/ci \
+            -v "$GITHUB_WORKSPACE/dbt_core":/usr/app \
+            pipeline-dbt:1.0 deps
 
       - name: Remover schemas do PR
         run: |
