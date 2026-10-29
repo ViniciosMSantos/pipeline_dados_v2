@@ -11,6 +11,7 @@ logs/
 
 # Credenciais dbt
 profiles.yml
+!dbt_core/ci/profiles.yml
 .dbt/
 
 # Ambiente

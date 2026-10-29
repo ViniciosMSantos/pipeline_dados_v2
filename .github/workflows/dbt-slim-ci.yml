@@ -2,7 +2,7 @@ name: dbt Slim CI
 
 # Em cada PR, builda só os models alterados (+ dependentes) com --empty
 # (SQL executado no Databricks com 0 linhas) e --defer para a produção.
-# Roda no self-hosted porque usa o ~/.dbt/profiles.yml e o .env do servidor.
+# Roda no self-hosted porque usa o .env do servidor (token) e o profile dbt_core/ci/profiles.yml.
 
 on:
   pull_request:
@@ -30,18 +30,17 @@ jobs:
 
       - name: dbt deps
         run: |
-          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e DBT_PROFILES_DIR=/profiles \
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e DBT_PROFILES_DIR=/usr/app/ci \
             -v "$GITHUB_WORKSPACE/dbt_core":/usr/app \
             pipeline-dbt:1.0 deps
 
       - name: dbt build (state:modified+ --defer --empty)
         run: |
           set -a; . "$ENV_FILE"; set +a
-          DOCKER="docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -e DBT_PROFILES_DIR=/profiles \
+          DOCKER="docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -e DBT_PROFILES_DIR=/usr/app/ci \
             -e DBT_DATABRICKS_TOKEN -e DBX_SP_CLIENT_ID -e DBX_SP_CLIENT_SECRET \
             -e DBT_CI_SCHEMA \
             -v $GITHUB_WORKSPACE/dbt_core:/usr/app \
-            -v $HOME/.dbt:/profiles:ro \
             -v $DBT_STATE_DIR:/state:ro \
             pipeline-dbt:1.0"
           if [ -f "$DBT_STATE_DIR/manifest.json" ]; then
@@ -63,8 +62,7 @@ jobs:
       - name: Remover schemas do PR
         run: |
           set -a; . "$ENV_FILE"; set +a
-          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e DBT_PROFILES_DIR=/profiles \
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e DBT_PROFILES_DIR=/usr/app/ci \
             -e DBT_DATABRICKS_TOKEN -e DBT_CI_SCHEMA \
             -v "$GITHUB_WORKSPACE/dbt_core":/usr/app \
-            -v "$HOME/.dbt":/profiles:ro \
             pipeline-dbt:1.0 run-operation drop_ci_schemas --target ci

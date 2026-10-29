@@ -1,0 +1,14 @@
+# Profile usado só pelo Slim CI (.github/workflows/dbt-slim-ci.yml).
+# O token vem do .env do servidor; nada sensível é versionado aqui.
+pipeline_dados:
+  target: ci
+
+  outputs:
+    ci:
+      type: databricks
+      catalog: dados_dev
+      schema: "{{ env_var('DBT_CI_SCHEMA', 'ci_local') }}"
+      host: dbc-bd51087c-3c7d.cloud.databricks.com
+      http_path: /sql/1.0/warehouses/df426e47607ac190
+      token: "{{ env_var('DBT_DATABRICKS_TOKEN') }}"
+      threads: 4

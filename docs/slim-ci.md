@@ -15,20 +15,10 @@ dbt build --target ci --select state:modified+ --defer --state /state --empty
 
 ## Setup único no servidor (self-hosted runner)
 
-1. Adicionar o target `ci` em `~/.dbt/profiles.yml`:
+O profile do CI está versionado em `dbt_core/ci/profiles.yml` (target `ci`, catálogo
+`dados_dev`); não é preciso editar o `~/.dbt/profiles.yml` do servidor.
 
-```yaml
-    ci:
-      type: databricks
-      catalog: dados_dev
-      schema: "{{ env_var('DBT_CI_SCHEMA', 'ci_local') }}"
-      host: dbc-bd51087c-3c7d.cloud.databricks.com
-      http_path: /sql/1.0/warehouses/df426e47607ac190
-      token: "{{ env_var('DBT_DATABRICKS_TOKEN') }}"
-      threads: 4
-```
-
+1. O `.env` do servidor deve ter `DBT_DATABRICKS_TOKEN` (e `DBX_SP_CLIENT_ID/SECRET`
+   se o target `prod` usar OAuth).
 2. Fazer um push na `master` para o deploy gerar `~/dbt-state/manifest.json`.
    Enquanto ele não existir, o CI roda só `dbt parse`.
-3. O `.env` do servidor deve ter `DBT_DATABRICKS_TOKEN` (e `DBX_SP_CLIENT_ID/SECRET`
-   se o target `prod` usar OAuth).
